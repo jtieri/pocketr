@@ -14,22 +14,22 @@ CPU is composed of 8-bit registers, however, the instruction set permits 16-bit 
 
 Some info taken from [gbdev.io](https://gbdev.io/pandocs/CPU_Registers_and_Flags.html)
 
-// ===================================================
-// 16bit  |  Hi  |  Lo  |   Name/Function
-// AF       A       -       Accumulator & Flags
-// BC       B       C       BC
-// DE       D       E       DE
-// HL       H       L       HL
-// SP       -       -       Stack Pointer
-// PC       -       -       Program Counter/Pointer
-// =================================================== 
+| 16-bit |  Hi |  Lo | Name / Function           |
+| -----: | :-: | :-: | ------------------------- |
+|     AF |  A  |  –  | Accumulator & Flags       |
+|     BC |  B  |  C  | BC                        |
+|     DE |  D  |  E  | DE                        |
+|     HL |  H  |  L  | HL                        |
+|     SP |  –  |  –  | Stack Pointer             |
+|     PC |  –  |  –  | Program Counter / Pointer |
 
-// Flags Register (lower 8 bits of AF register)
-//--------------------------------------------------
-// Bit      Name        Explanation
-// 7        z           Zero flag
-// 6        n           Subtraction flag (BCD)
-// 5        h           Half Carry flag (BCD)
-// 4        c           Carry flag
-//--------------------------------------------------
-// * contains info about the result of the most recent instruction that has affected flags
+Flags Register (Lower 8 bits of AF register)
+| Bit | Name | Explanation            |
+| --: | :--: | ---------------------- |
+|   7 |   z  | Zero flag              |
+|   6 |   n  | Subtraction flag (BCD) |
+|   5 |   h  | Half Carry flag (BCD)  |
+|   4 |   c  | Carry flag             |
+
+> Note:
+The flags register contains information about the result of the most recent instruction that affected flags.
