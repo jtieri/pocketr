@@ -1,7 +1,7 @@
 
 // The Zero Flag (Z)
 // This bit is set if and only if the result of an operation is zero. Used by conditional jumps.
-const ZERO_FLAG_BIT_POSITION: u8 = 0b1000_0000;
+const ZERO_FLAG_BIT_MASK: u8 = 0b1000_0000;
 
 // The BCD Flags (N, H)
 // These flags are used by the DAA instruction only.
@@ -13,8 +13,8 @@ const ZERO_FLAG_BIT_POSITION: u8 = 0b1000_0000;
 // Because only two flags (C and H) exist to indicate carry-outs of BCD digits,
 // DAA is ineffective for 16-bit operations (which have 4 digits),
 // and use for INC/DEC operations (which do not affect C-flag) has limits.
-const SUBTRACTION_FLAG_BIT_POSITION: u8 = 0b0100_0000;
-const HALF_CARRY_FLAG_BIT_POSITION: u8 = 0b0010_0000;
+const SUBTRACTION_FLAG_BIT_MASK: u8 = 0b0100_0000;
+const HALF_CARRY_FLAG_BIT_MASK: u8 = 0b0010_0000;
 
 // The Carry Flag (C or Cy)
 // Is set in these cases:
@@ -23,50 +23,50 @@ const HALF_CARRY_FLAG_BIT_POSITION: u8 = 0b0010_0000;
 //  - When the result of a subtraction or comparison is lower than zero (like in Z80 and x86 CPUs, but unlike in 65XX and ARM CPUs).
 //  - When a rotate/shift operation shifts out a “1” bit.
 // Used by conditional jumps and instructions such as ADC, SBC, RL, RLA, etc.
-const CARRY_FLAG_BIT_POSITION: u8 = 0b0001_0000;
+const CARRY_FLAG_BIT_MASK: u8 = 0b0001_0000;
 
 #[derive(Default, Debug, Clone, Copy)]
-pub struct Flags(u8);
+pub struct Flags(pub u8);
 
 impl Flags {
     #[inline]
     pub fn get_zero_flag(&self) -> bool {
-        self.0 & ZERO_FLAG_BIT_POSITION != 0
+        self.0 & ZERO_FLAG_BIT_MASK != 0
     }
 
     #[inline]
     pub fn get_subtract_flag(&self) -> bool {
-        self.0 & SUBTRACTION_FLAG_BIT_POSITION != 0
+        self.0 & SUBTRACTION_FLAG_BIT_MASK != 0
     }
 
     #[inline]
     pub fn get_half_carry_flag(&self) -> bool {
-        self.0 & HALF_CARRY_FLAG_BIT_POSITION != 0
+        self.0 & HALF_CARRY_FLAG_BIT_MASK != 0
     }
 
     #[inline]
     pub fn get_carry_flag(&self) -> bool {
-        self.0 & CARRY_FLAG_BIT_POSITION != 0
+        self.0 & CARRY_FLAG_BIT_MASK != 0
     }
 
     #[inline]
     pub fn set_zero_flag(&mut self, value: bool) {
-        self.0 = (self.0 & !ZERO_FLAG_BIT_POSITION) | ((value as u8) << 7);
+        self.0 = (self.0 & !ZERO_FLAG_BIT_MASK) | ((value as u8) << 7);
     }
 
     #[inline]
     pub fn set_subtract_flag(&mut self, value: bool) {
-        self.0 = (self.0 & !SUBTRACTION_FLAG_BIT_POSITION) | ((value as u8) << 6);
+        self.0 = (self.0 & !SUBTRACTION_FLAG_BIT_MASK) | ((value as u8) << 6);
     }
 
     #[inline]
     pub fn set_half_carry_flag(&mut self, value: bool) {
-        self.0 = (self.0 & !HALF_CARRY_FLAG_BIT_POSITION) | ((value as u8) << 5);
+        self.0 = (self.0 & !HALF_CARRY_FLAG_BIT_MASK) | ((value as u8) << 5);
     }
 
     #[inline]
     pub fn set_carry_flag(&mut self, value: bool) {
-        self.0 = (self.0 & !CARRY_FLAG_BIT_POSITION) | ((value as u8) << 4);
+        self.0 = (self.0 & !CARRY_FLAG_BIT_MASK) | ((value as u8) << 4);
     }
 
     // sanitize is meant to be called after multi-flag writes/updates or register loads.
