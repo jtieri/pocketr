@@ -1,21 +1,18 @@
+use flags::FlagsRegister;
+
+mod flags;
 
 // The Gameboy uses 8-bit registers but has instructions  that allow games to read and write 16 bits of data.
+#[derive(Debug, Default)]
 pub struct Registers {
     a: u8,
     b: u8,
     c: u8,
     d: u8,
     e: u8,
-    f: u8,
+    f: FlagsRegister,
     h: u8,
     l: u8,
-}
-
-pub enum Flags {
-    z = 0b01000000, // This bit is set if and only if the result of an operation is zero. Used by conditional jumps.
-    n = 0b00100000,
-    h = 0b00010000,
-    c = 0b00001000,
 }
 
 // We treat the "Hi" register as a u16 which effectively just adds a byte of all 0s to the significant position.
