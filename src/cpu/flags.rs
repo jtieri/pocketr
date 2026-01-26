@@ -25,7 +25,7 @@ const HALF_CARRY_FLAG_BIT_MASK: u8 = 0b0010_0000;
 // Used by conditional jumps and instructions such as ADC, SBC, RL, RLA, etc.
 const CARRY_FLAG_BIT_MASK: u8 = 0b0001_0000;
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Flags(pub u8);
 
 impl Flags {

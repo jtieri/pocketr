@@ -1,7 +1,7 @@
 use super::flags::Flags;
 
 // The Gameboy uses 8-bit registers but has instructions that allow games to read and write 16 bits of data.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Registers {
     pub a: u8,
     pub f: Flags,
@@ -11,7 +11,6 @@ pub struct Registers {
     pub e: u8,
     pub h: u8,
     pub l: u8,
-    pub pc: u16,
     pub sp: u16
 }
 
