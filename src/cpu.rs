@@ -5,6 +5,8 @@ mod flags;
 mod registers;
 mod instructions;
 
+const PREFIX_BYTE: u8 = 0xCB;
+
 #[derive(Debug)]
 pub struct CPU {
     registers: Registers,
@@ -25,10 +27,22 @@ impl MemoryBus {
 
 impl CPU {
     pub fn step(&mut self) {
-        let opcode = self.bus.read_byte(self.pc);
+        let mut opcode = self.bus.read_byte(self.pc);
+        
+        let prefixed = opcode == PREFIX_BYTE;
+        if prefixed { 
+            opcode = self.bus.read_byte(self.pc);
+        }
+        // TODO: prefixed byte handling needs to be properly implemented
+        
         self.pc = self.execute_opcode(opcode)
     }
     
+    // nop is the NOP CPU instruction that results in a no operation.
+    // Opcode: 0x00
+    // Cycles: 1
+    // Bytes: 1
+    // Flags: None affected
     fn nop(&mut self) {
     
     }
