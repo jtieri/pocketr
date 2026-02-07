@@ -1,7 +1,7 @@
 use registers::Registers;
 use instructions::INSTRUCTIONS;
 
-use crate::cpu::registers::{Register8Bit, Register16Bit};
+use crate::cpu::{instructions::PREFIXED_INSTRUCTIONS, registers::{Register8Bit, Register16Bit}};
 
 mod flags;
 mod registers;
@@ -29,24 +29,39 @@ impl MemoryBus {
 }
 
 impl CPU {
-    pub fn step(&mut self) {
-        let mut opcode = self.bus.read_byte(self.pc);
-        
-        let prefixed = opcode == PREFIX_BYTE;
-        if prefixed { 
-            opcode = self.bus.read_byte(self.pc);
-        }
-        // TODO: prefixed byte handling needs to be properly implemented
-        
-        self.pc = self.execute_opcode(opcode)
+    fn fetch(&mut self) -> u8 {
+        let byte = self.bus.read_byte(self.pc);
+        self.pc = self.pc.wrapping_add(1);
+        byte
     }
     
-    fn execute_opcode(&mut self, opcode: u8) -> u16 {
-        if let Some(&instruction_fn) = INSTRUCTIONS.get(opcode as usize) {
-                instruction_fn(self);
-                self.pc.wrapping_add(1)
-        } else {
-                panic!("Unknown instruction found for: 0x{:x}", opcode)
+    pub fn step(&mut self) {
+        let mut opcode = self.fetch();
+        
+        let prefixed = opcode == PREFIX_BYTE;
+        if prefixed {
+            opcode = self.fetch();
+        }
+        
+        self.execute_opcode(prefixed, opcode);
+    }
+    
+    fn execute_opcode(&mut self, prefixed: bool, opcode: u8) {
+        match prefixed {
+            true => {
+                if let Some(&instruction_fn) = PREFIXED_INSTRUCTIONS.get(opcode as usize) {
+                        instruction_fn(self);
+                } else {
+                        panic!("Unknown prefixed instruction found for: 0x{}{:x}", PREFIX_BYTE, opcode)
+                }
+            },
+            false => {
+                if let Some(&instruction_fn) = INSTRUCTIONS.get(opcode as usize) {
+                        instruction_fn(self);
+                } else {
+                        panic!("Unknown instruction found for: 0x{:x}", opcode)
+                }
+            }
         }
     }
     
@@ -71,6 +86,11 @@ impl CPU {
             Register16Bit::HL => self.registers.read_hl()
         }
     }
+    
+    // unimplemented is a temporary placeholder for instruction handlers that are not implemented yet.
+    fn unimplemented(&mut self) {
+        panic!("Unimplemented opcode")
+    } 
     
     // nop is the NOP CPU instruction that does nothing (no-op) other than advance the program counter by 1.
     // Opcode: 0x00
