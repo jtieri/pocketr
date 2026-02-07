@@ -14,6 +14,16 @@ pub struct Registers {
     pub sp: u16
 }
 
+// Register8Bit represents a single 8bit register and is used to specify target registers in CPU instructions.
+// HLIndirect is used to specify that the contents of the memory address contained in the register pair HL should be used in the operation. 
+pub enum Register8Bit {
+    A, B, C, D, E, H, L, HLIndirect
+}
+
+pub enum Register16Bit {
+    AF, BC, DE, HL
+}
+
 // We treat the "Hi" register as a u16 which effectively just adds a byte of all 0s to the significant position.
 // Then we shift the b register 8 positions so that it's occupying the most significant byte position.
 // We then bitwise OR the c register so that the result is a two byte number with the contents of b in the most significant byte postion
@@ -33,7 +43,8 @@ impl Registers {
         }
     }
     
-    pub fn read_af(&self) -> u16 {
+    pub fn read_af(&mut self) -> u16 {
+        self.f.sanitize();
         (self.a as u16) << 8 | self.f.0 as u16
     }
     
