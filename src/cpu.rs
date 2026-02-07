@@ -19,7 +19,7 @@ pub struct CPU {
 
 #[derive(Debug)]
 pub struct MemoryBus {
-    memory: [u8; 0xFFFF],
+    memory: [u8; 0x10000], // Memory contains 65536 bytes (Addressed 0x0000-0xFFFF inclusive)   
 }
 
 impl MemoryBus {
