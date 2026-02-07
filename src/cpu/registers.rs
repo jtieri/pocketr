@@ -19,6 +19,20 @@ pub struct Registers {
 // We then bitwise OR the c register so that the result is a two byte number with the contents of b in the most significant byte postion
 // and the contents of c in the least significant byte position.
 impl Registers {
+    pub fn default() -> Registers {
+        Registers { 
+            a: 0, 
+            f: Flags(0), 
+            b: 0, 
+            c: 0, 
+            d: 0, 
+            e: 0, 
+            h: 0, 
+            l: 0, 
+            sp: 0, 
+        }
+    }
+    
     pub fn read_af(&self) -> u16 {
         (self.a as u16) << 8 | self.f.0 as u16
     }
@@ -55,4 +69,45 @@ impl Registers {
         self.h = ((value & 0xFF00) >> 8) as u8;
         self.l = (value & 0xFF) as u8;
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn register_af_sanitizes() {
+        let mut r = Registers::default();
+        
+        // The lower nibble of the register F should alw
+        let first_bit = 0b0000_0001;
+        let second_bit = 0b0000_0010;
+        let third_bit = 0b0000_0100;
+        let fourth_bit = 0b000_1000;
+        
+        let should_sanitize = [first_bit, second_bit, third_bit, fourth_bit];
+        
+        for bit in should_sanitize {
+            println!("Writing: {bit}");
+            r.write_af(bit);
+            let bz = r.read_af();
+            println!("Read: {bz}");
+            assert_eq!(bz, 0);
+        }
+    }
+    
+    fn read_and_write_af() {
+        let mut r = Registers::default();
+        
+        let b = 0b0001_0000;
+        println!("Writing: {b}");
+        
+        r.write_af(b);
+        
+        let bz = r.read_af();
+        
+        println!("Read: {bz}");
+        
+        assert_eq!(bz,b);
+    } 
 }

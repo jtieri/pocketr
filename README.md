@@ -58,3 +58,6 @@ The main loop for processing instructions is:
 - If the translation is successful call `execute` for that instruction or else panic, which should now return the next PC
 - Set this next PC on the CPU
 
+## Resources
+
+[Meganesu GB Opcodes Table](https://meganesu.github.io/generate-gb-opcodes/)

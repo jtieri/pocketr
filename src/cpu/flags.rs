@@ -77,3 +77,50 @@ impl Flags {
         self.0 &= 0xF0;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn should_sanitize() {
+        let mut flags = Flags(0);
+        
+        // The lower nibble of the register F should always get zeroed out
+        let first_bit = 0b0000_0001;
+        let second_bit = 0b0000_0010;
+        let third_bit = 0b0000_0100;
+        let fourth_bit = 0b0000_1000;
+        
+        let should_sanitize = [first_bit, second_bit, third_bit, fourth_bit];
+        
+        for bit in should_sanitize {
+            println!("Writing: {bit}");
+            flags.0 = bit;
+            flags.sanitize();
+            println!("Read: {}", flags.0);
+            assert_eq!(flags.0, 0);
+        }
+    }
+    
+    #[test]
+    fn should_not_sanitize() {
+        let mut flags = Flags(0);
+        
+        // The upper nibble of the register F should not get zeroed out via sanitize()
+        let fifth_bit = 0b0001_0000;
+        let sixth_bit = 0b0010_0000;
+        let seventh_bit = 0b0100_0000;
+        let eighth_bit = 0b1000_0000;
+        
+        let should_not_sanitize = [fifth_bit, sixth_bit, seventh_bit, eighth_bit];
+        
+        for bit in should_not_sanitize {
+            println!("Writing: {bit}");
+            flags.0 = bit;
+            flags.sanitize();
+            println!("Read: {}", flags.0);
+            assert_eq!(flags.0, bit);
+        }
+    }
+}
