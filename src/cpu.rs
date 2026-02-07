@@ -111,15 +111,15 @@ impl CPU {
         
         // Add the target register value to the value in the A register and handle overflow
         let (new_val, overflow) = self.registers.a.overflowing_add(val);
-
-        // Write updated value to the A register
-        self.registers.a = new_val;
         
         // Update flags
         self.registers.f.set_zero_flag(new_val == 0);
         self.registers.f.set_subtract_flag(false);
         self.registers.f.set_carry_flag(overflow);
         self.registers.f.set_half_carry_flag((self.registers.a & 0xF) + (val & 0xF) > 0xF);
+        
+        // Write updated value to the A register
+        self.registers.a = new_val;
     }
     
     fn did_half_carry() {
