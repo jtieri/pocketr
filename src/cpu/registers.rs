@@ -43,8 +43,7 @@ impl Registers {
         }
     }
     
-    pub fn read_af(&mut self) -> u16 {
-        self.f.sanitize();
+    pub fn read_af(&self) -> u16 {
         (self.a as u16) << 8 | self.f.0 as u16
     }
     
