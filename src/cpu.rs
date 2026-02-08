@@ -51,14 +51,14 @@ impl CPU {
     
     // step executes single machine instructions through a fetch, decode, and execute loop that processes program memory.
     pub fn step(&mut self) {
-        let mut opcode = self.fetch();
+        let opcode = self.fetch();
         
-        let prefixed = opcode == PREFIX_BYTE;
-        if prefixed {
-            opcode = self.fetch();
+        if opcode == PREFIX_BYTE {
+            let opcode = self.fetch();
+            self.execute_prefixed(opcode);
+        } else {
+            self.execute(opcode);
         }
-        
-        self.execute_opcode(prefixed, opcode);
     }
     
     // fetch reads a single byte from memory and increments the program counter by one.
@@ -68,23 +68,21 @@ impl CPU {
         byte
     }
     
-    // execute_opcode handles the "decode and execute" stages of the "fetch, decode, and execute" hot loop in the CPU.
-    fn execute_opcode(&mut self, prefixed: bool, opcode: u8) {
-        match prefixed {
-            true => {
-                if let Some(&instruction_fn) = PREFIXED_INSTRUCTIONS.get(opcode as usize) {
-                        instruction_fn(self);
-                } else {
-                        panic!("Unknown prefixed instruction found for: 0x{}{:x}", PREFIX_BYTE, opcode)
-                }
-            },
-            false => {
-                if let Some(&instruction_fn) = INSTRUCTIONS.get(opcode as usize) {
-                        instruction_fn(self);
-                } else {
-                        panic!("Unknown instruction found for: 0x{:x}", opcode)
-                }
-            }
+    // execute handles the "decode and execute" stages of the "fetch, decode, and execute" hot loop in the CPU.
+    fn execute(&mut self, opcode: u8) {
+        if let Some(&instruction_fn) = INSTRUCTIONS.get(opcode as usize) {
+                instruction_fn(self);
+        } else {
+                panic!("Unknown instruction found for: 0x{:x}", opcode)
+        }
+    }
+    
+    // execute_prefixed handles the "decode and execute" stages of the "fetch, decode, and execute" hot loop in the CPU for prefixed opcodes.
+    fn execute_prefixed(&mut self, opcode: u8) {
+        if let Some(&instruction_fn) = PREFIXED_INSTRUCTIONS.get(opcode as usize) {
+                instruction_fn(self);
+        } else {
+                panic!("Unknown prefixed instruction found for: 0x{}{:x}", PREFIX_BYTE, opcode)
         }
     }
     
