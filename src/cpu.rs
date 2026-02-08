@@ -1,13 +1,13 @@
 use registers::Registers;
 use instructions::INSTRUCTIONS;
 
-use crate::cpu::{instructions::PREFIXED_INSTRUCTIONS, registers::{Register8Bit, Register16Bit}};
+use crate::cpu::{flags::Flags, instructions::PREFIXED_INSTRUCTIONS, registers::{Register8Bit, Register16Bit}};
 
 mod flags;
 mod registers;
 mod instructions;
 
-// PREFIX_BYTE is used as a prefix for 16bit opcodes 
+// PREFIX_BYTE is used as a prefix for 16-bit opcodes 
 const PREFIX_BYTE: u8 = 0xCB;
 
 #[derive(Debug)]
@@ -29,12 +29,27 @@ impl MemoryBus {
 }
 
 impl CPU {
-    fn fetch(&mut self) -> u8 {
-        let byte = self.bus.read_byte(self.pc);
-        self.pc = self.pc.wrapping_add(1);
-        byte
+    pub fn new() -> Self {
+        CPU {
+            registers: Registers {
+                a: 0,
+                f: Flags(0),
+                b: 0,
+                c: 0,
+                d: 0,
+                e: 0,
+                h: 0,
+                l: 0,
+                sp: 0,
+            },
+            pc: 0,
+            bus: MemoryBus { 
+                memory: [0; 0x10000]
+            },
+        }
     }
     
+    // step executes single machine instructions through a fetch, decode, and execute loop that processes program memory.
     pub fn step(&mut self) {
         let mut opcode = self.fetch();
         
@@ -46,6 +61,14 @@ impl CPU {
         self.execute_opcode(prefixed, opcode);
     }
     
+    // fetch reads a single byte from memory and increments the program counter by one.
+    fn fetch(&mut self) -> u8 {
+        let byte = self.bus.read_byte(self.pc);
+        self.pc = self.pc.wrapping_add(1);
+        byte
+    }
+    
+    // execute_opcode handles the "decode and execute" stages of the "fetch, decode, and execute" hot loop in the CPU.
     fn execute_opcode(&mut self, prefixed: bool, opcode: u8) {
         match prefixed {
             true => {
@@ -65,8 +88,9 @@ impl CPU {
         }
     }
     
-    fn read_register_8bit(&self, target: Register8Bit) -> u8 {
-        match target {
+    // read_register_8bit reads the contents of an 8-bit register.
+    fn read_register_8bit(&self, register: Register8Bit) -> u8 {
+        match register {
             Register8Bit::A => self.registers.a,
             Register8Bit::B => self.registers.b,
             Register8Bit::C => self.registers.c,
@@ -78,8 +102,9 @@ impl CPU {
         }
     }
     
-    fn read_register_16bit(&mut self, target: Register16Bit) -> u16 {
-        match target {
+    // read_register_16bit reads the contents of a 16-bit register pair.
+    fn read_register_16bit(&self, register: Register16Bit) -> u16 {
+        match register {
             Register16Bit::AF => self.registers.read_af(),
             Register16Bit::BC => self.registers.read_bc(),
             Register16Bit::DE => self.registers.read_de(),
@@ -92,24 +117,24 @@ impl CPU {
         panic!("Unimplemented opcode")
     } 
     
-    // nop is the NOP CPU instruction that does nothing (no-op) other than advance the program counter by 1.
+    // nop handles the NOP CPU instruction that does nothing (no-op) other than advance the program counter by 1.
     // Opcode: 0x00
     // Bytes: 1
     // Cycles: 1
     // Flags: ----
     fn nop(&mut self) {}
     
-    // add is the ADD CPU instruction for adding the value found in an 8bit target register to the value in the A register.
-    // The new value is then stored in the A register.
+    // add handles the ADD CPU instruction, which adds the value found in an 8-bit source register to the value in register A.
+    // The new value is then stored in register A.
     // Opcode: 0x80 - 0x87
     // Bytes: 1
-    // Cycles: 1
+    // Cycles: 1 (2 for 0x86 when dealing with indirect memory access through register pair HL)
     // Flags: ZHC-
-    fn add_a(&mut self, target: Register8Bit) {
-        // Read value currently in the target register
-        let val = self.read_register_8bit(target);
+    fn add_a(&mut self, source: Register8Bit) {
+        // Read value currently in the source register
+        let val = self.read_register_8bit(source);
         
-        // Add the target register value to the value in the A register and handle overflow
+        // Add the value in the source register to the value in register A and handle overflow
         let (new_val, overflow) = self.registers.a.overflowing_add(val);
         
         // Update flags
@@ -118,11 +143,32 @@ impl CPU {
         self.registers.f.set_carry_flag(overflow);
         self.registers.f.set_half_carry_flag((self.registers.a & 0xF) + (val & 0xF) > 0xF);
         
-        // Write updated value to the A register
+        // Write updated value to register A
         self.registers.a = new_val;
     }
     
-    fn did_half_carry() {
+    // adc_a handles the ADC, A CPU instruction, which adds the contents of an 8-bit source register and the CY flag
+    // to the contents of register A. The new value is then stored in register A.
+    // Opcode: 0x88 - 0x8F
+    // Bytes: 1
+    // Cycles: 1
+    // Flags: ZO
+    fn adc_a(&mut self, target: Register8Bit) {
+        // Read the values currently in the source register and the carry flag
+        let val = self.read_register_8bit(target);
+        let cy_val = self.registers.f.get_carry_flag() as u8;
         
+        // Add the value in the source register plus the value in the carry register 
+        // to the value in register A and handle overflow
+        let (new_val, overflow) = self.registers.a.overflowing_add(val + cy_val);
+        
+        // Update flags
+        self.registers.f.set_zero_flag(new_val == 0);
+        self.registers.f.set_subtract_flag(false);
+        self.registers.f.set_carry_flag(overflow);
+        self.registers.f.set_half_carry_flag((self.registers.a & 0xF) + (val & 0xF) + (cy_val & 0xF) > 0xF);
+        
+        // Write updated value to register A
+        self.registers.a = new_val;
     }
 }
