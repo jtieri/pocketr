@@ -1,10 +1,40 @@
+use std::{
+    fs::read
+};
+
 use crate::cpu::CPU;
 
 mod cpu;
 
+const PATH_TO_BOOT_ROM: &str = "./tools/dmg_boot.bin";
+
 fn main() {
-    let mut cpu = CPU::new().with_rom(DMG_BOOT);
+    let boot_rom_bytes = read_boot_rom(true);
+    sanity_check_boot_rom(&boot_rom_bytes);
+    let mut cpu = CPU::new().with_rom(boot_rom_bytes.iter().as_slice());
     cpu.run();
+}
+
+fn read_boot_rom(debug: bool) -> Vec<u8> {
+    let bytes = read(PATH_TO_BOOT_ROM).unwrap();
+    
+    if debug {
+        println!("Read boot ROM from file");
+        for byte in &bytes {
+            println!("{:#X}", byte);
+        }
+    }
+    
+    bytes
+}
+
+fn sanity_check_boot_rom(bytes: &Vec<u8>) {
+    if bytes.iter().len() != 256 {
+        panic!("Read invalid size boot ROM expected(256) got({}).", bytes.len());
+    }
+    if bytes != DMG_BOOT {
+        panic!("Boot ROM file contents do not match expected DMG boot ROM bytes.");
+    }
 }
 
 const DMG_BOOT: &[u8; 0x0100] = &[
