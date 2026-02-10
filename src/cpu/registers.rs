@@ -14,20 +14,11 @@ pub struct Registers {
     pub sp: u16
 }
 
-// Register8Bit represents a single 8bit register and is used to specify target registers in CPU instructions.
-// HLIndirect is used to specify that the contents of the memory address contained in the register pair HL should be used in the operation. 
-pub enum Register8Bit {
-    A, B, C, D, E, H, L, HLIndirect
-}
-
-pub enum Register16Bit {
-    AF, BC, DE, HL
-}
-
-// We treat the "Hi" register as a u16 which effectively just adds a byte of all 0s to the significant position.
-// Then we shift the b register 8 positions so that it's occupying the most significant byte position.
-// We then bitwise OR the c register so that the result is a two byte number with the contents of b in the most significant byte postion
-// and the contents of c in the least significant byte position.
+// Register pairs are treated like 16-bit values in big-endian order.
+// 
+// When we read from a register pair we treat the Hi register as a u16 which adds a byte of all 0s to the most significant position.
+// Then we shift the bits by 8 to move the original value to the most significant byte position.
+// We then bitwise OR with the Lo register so that the result is a two byte number with the contents of both registers. 
 impl Registers {
     pub fn default() -> Registers {
         Registers { 
@@ -50,7 +41,7 @@ impl Registers {
     pub fn write_af(&mut self, value: u16) {
         self.a = ((value & 0xFF00) >> 8) as u8;
         self.f = Flags((value & 0xFF) as u8);
-        self.f.sanitize(); // Important! Lower nibble must be 0
+        self.f.sanitize(); // The lower nibble of the flag register must always be zero
     }
     
     pub fn read_bc(&self) -> u16 {
@@ -89,7 +80,7 @@ mod tests {
     fn register_af_sanitizes() {
         let mut r = Registers::default();
         
-        // The lower nibble of the register F should alw
+        // The lower nibble of the register F should always be zero
         let first_bit = 0b0000_0001;
         let second_bit = 0b0000_0010;
         let third_bit = 0b0000_0100;

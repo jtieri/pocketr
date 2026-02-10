@@ -1,4 +1,3 @@
-
 // The Zero Flag (Z)
 // This bit is set if and only if the result of an operation is zero. Used by conditional jumps.
 const ZERO_FLAG_BIT_MASK: u8 = 0b1000_0000;
@@ -71,7 +70,7 @@ impl Flags {
 
     // sanitize is meant to be called after multi-flag writes/updates or register loads.
     // this maintains the invariant of the LR35902 chip's flag register behavior,
-    // which says that the first 4 bits of the flag register must always be 0s. 
+    // which says that the least significant nibble of the flag register must always be 0s. 
     pub fn sanitize(&mut self) {
         // 0xF0 = 1111 0000
         self.0 &= 0xF0;
