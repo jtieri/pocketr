@@ -49,6 +49,18 @@ impl CPU {
             },
         }
     }
+    
+    pub fn with_rom(mut self, rom: &[u8]) -> Self {
+        let len = rom.len();
+        self.bus.memory[..len].copy_from_slice(rom);
+        self
+    }
+    
+    pub fn run(&mut self) {
+        loop {
+            self.step();
+        }
+    }
      
     // step executes single machine instructions through a fetch, decode, and execute loop that processes program memory.
     pub fn step(&mut self) {
